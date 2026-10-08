@@ -10,16 +10,76 @@ type Assignment = {
 
 function App() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [name, setName] = useState("");
+  const [course, setCourse] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
-  useEffect(() => {
+  const fetchAssignments = () => {
     fetch("http://127.0.0.1:8000/assignments")
       .then((response) => response.json())
       .then((data) => setAssignments(data));
+  };
+
+  useEffect(() => {
+    fetchAssignments();
   }, []);
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    fetch(
+      `http://127.0.0.1:8000/assignments?name=${encodeURIComponent(
+        name
+      )}&course=${encodeURIComponent(
+        course
+      )}&due_date=${encodeURIComponent(dueDate)}`,
+      {
+        method: "POST",
+      }
+    )
+      .then((response) => response.json())
+      .then(() => {
+        setName("");
+        setCourse("");
+        setDueDate("");
+        fetchAssignments();
+      });
+  };
 
   return (
     <div>
       <h1>Semestr</h1>
+
+      <h2>Add Assignment</h2>
+
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Assignment name: </label>
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
+
+        <div>
+          <label>Course: </label>
+          <input
+            value={course}
+            onChange={(event) => setCourse(event.target.value)}
+          />
+        </div>
+
+        <div>
+          <label>Due date: </label>
+          <input
+            type="datetime-local"
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+          />
+        </div>
+
+        <button type="submit">Add Assignment</button>
+      </form>
 
       <h2>Assignments</h2>
 
