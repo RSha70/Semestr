@@ -46,6 +46,28 @@ function App() {
       });
   };
 
+  const handleCompletedChange = (
+    assignmentId: number,
+    completed: boolean
+  ) => {
+    fetch(
+      `http://127.0.0.1:8000/assignments/${assignmentId}?completed=${completed}`,
+      {
+        method: "PUT",
+      }
+    )
+      .then((response) => response.json())
+      .then((updatedAssignment) => {
+        setAssignments((currentAssignments) =>
+          currentAssignments.map((assignment) =>
+            assignment.id === updatedAssignment.id
+              ? updatedAssignment
+              : assignment
+          )
+        );
+      });
+  };
+
   return (
     <div>
       <h1>Semestr</h1>
@@ -85,7 +107,21 @@ function App() {
 
       {assignments.map((assignment) => (
         <div key={assignment.id}>
-          <h3>{assignment.name}</h3>
+          <div>
+            <input
+              type="checkbox"
+              checked={assignment.completed}
+              onChange={(event) =>
+                handleCompletedChange(
+                  assignment.id,
+                  event.target.checked
+                )
+              }
+            />
+
+            <span>{assignment.name}</span>
+          </div>
+
           <p>{assignment.course}</p>
           <p>Due: {assignment.due_date}</p>
         </div>
