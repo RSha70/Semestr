@@ -119,7 +119,13 @@ function App() {
               }
             />
 
-            <span>{assignment.name}</span>
+            <span
+  style={{
+    textDecoration: assignment.completed ? "line-through" : "none",
+  }}
+>
+  {assignment.name}
+</span>
           </div>
 
           <p>{assignment.course}</p>
