@@ -79,52 +79,81 @@ def update_assignment(assignment_id: int, completed: bool):
 async def upload_syllabus(file: UploadFile = File(...)):
     contents = await file.read()
 
-    if not file.filename.lower().endswith(".pdf"):
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
         return {"error": "Please upload a PDF file."}
 
     reader = PdfReader(BytesIO(contents))
 
     text = ""
-
     for page in reader.pages:
-        page_text = page.extract_text() or ""
-        text += page_text + "\n"
+        text += (page.extract_text() or "") + "\n"
 
     text = " ".join(text.split())
+    print(text)
 
-    exam_dates = []
+    # Identify the course code, such as LING 2100.
 
-    exam_section = re.search(
-        r"Exams\s+(.*?)(?=Attention checks)",
+    course = "Unknown course"
+
+    course_match = re.search(
+        r"\b([A-Z]{2,5}\s*\d{3,4})\b",
         text,
         re.IGNORECASE,
     )
 
-    if exam_section:
-        exam_dates = re.findall(
-            r"(September|October|November|December)\s+(\d{1,2})",
-            exam_section.group(1),
-            re.IGNORECASE,
-        )
+    if course_match:
+        course = course_match.group(1).upper()
+
+    if re.search(r"\bLing\s*2100\b", text, re.IGNORECASE):
+        course = "Ling 2100"
+
+    # Restrict extraction to the grading section when possible.
+    grading_match = re.search(
+        r"Grading Criteria.*?Assignment Description/Notes"
+        r"(.*?)Attention checks",
+        text,
+        re.IGNORECASE,
+    )
+
+    section = grading_match.group(1) if grading_match else text
+
+    # Find dates listed directly after "Exams".
+    exam_match = re.search(
+        r"\bExams?\s+((?:(?:January|February|March|April|May|June|"
+        r"July|August|September|October|November|December)"
+        r"\s+\d{1,2}\s*;?\s*)+)",
+        section,
+        re.IGNORECASE,
+    )
 
     exams = []
 
-    for month, day in exam_dates:
-        try:
-            due_date = datetime.strptime(
-                f"{month} {day} 2026", "%B %d %Y"
-            )
+    if exam_match:
+        dates = re.findall(
+            r"(January|February|March|April|May|June|July|August|"
+            r"September|October|November|December)\s+(\d{1,2})",
+            exam_match.group(1),
+            re.IGNORECASE,
+        )
+
+        for index, (month, day) in enumerate(dates, start=1):
+            try:
+                due_date = datetime.strptime(
+                    f"{month} {day} 2026", "%B %d %Y"
+                )
+            except ValueError:
+                continue
 
             exams.append({
-                "name": f"Ling 2100 Exam {len(exams) + 1}",
-                "course": "Ling 2100",
+                "name": f"{course} Exam {index}",
+                "course": course,
                 "due_date": due_date.isoformat(),
+                "type": "exam",
             })
-        except ValueError:
-            continue
 
     return {
         "filename": file.filename,
         "pages": len(reader.pages),
+        "deadlines_found": exams,
         "exams_found": exams,
     }
