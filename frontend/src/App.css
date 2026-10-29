@@ -56,11 +56,8 @@ button:disabled {
 
 .app-shell {
   min-height: 100vh;
-  background-color: #fff8f5;
-  background-image:
-    radial-gradient(ellipse at 8% 8%, #f9dfe9 0, transparent 27%),
-    radial-gradient(ellipse at 94% 35%, #e4eedf 0, transparent 25%),
-    radial-gradient(ellipse at 65% 95%, #eee7fb 0, transparent 30%);
+  background-color: transparent;
+  background-image: none;
 }
 
 /* Header */
@@ -133,7 +130,7 @@ button:disabled {
   position: relative;
   margin-bottom: 30px;
   padding: 28px 26px 30px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #f0d8e1;
   border-radius: 24px 20px 27px 18px;
   background:
@@ -807,11 +804,8 @@ h3 {
 }
 
 .app-shell {
-  background-color: #f8f0eb;
-  background-image:
-    radial-gradient(circle at 12px 12px, #e7d5d8 0.8px, transparent 1px),
-    radial-gradient(circle at 6px 6px, #d9e1d0 0.7px, transparent 1px);
-  background-size: 24px 24px, 24px 24px;
+  background-color: transparent;
+  background-image: none;
 }
 
 /* Header becomes a scrapbook title strip */
@@ -888,8 +882,9 @@ h3 {
 /* Washi tape across the intro card */
 .welcome::before {
   position: absolute;
-  top: -1px;
+  top: -10px;
   left: 42px;
+  z-index: 2;
   width: 90px;
   height: 21px;
   border-right: 1px dashed #d3a2b3;
@@ -1261,7 +1256,9 @@ body,
 }
 
 body {
-  background-image: none;
+  background-image: url("/images/zuber-pink-wallpaper.jpg");
+  background-repeat: repeat;
+  background-size: 330px auto;
 }
 
 .app-shell {
@@ -1545,4 +1542,63 @@ body {
   }
 }
 
+/* Pink wallpaper behind the planner */
+body {
+  background-image: url("/images/zuber-pink-wallpaper.jpg");
+  background-repeat: repeat;
+  background-size: 330px auto;
+  background-attachment: scroll;
+}
 
+/* Use the green plant washi tape image */
+
+.welcome::before,
+.panel::before {
+  border: none;
+  background-image: url("/images/green-plant-washi-tape.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  opacity: 0.95;
+}
+
+.welcome::before {
+  top: -13px;
+  left: 42px;
+  width: 105px;
+  height: 30px;
+  transform: rotate(-4deg);
+}
+
+.panel::before {
+  top: -10px;
+  left: 28px;
+  width: 75px;
+  height: 24px;
+  transform: rotate(-3deg);
+}
+
+.main-grid > .panel:nth-child(2)::before {
+  left: 68%;
+  transform: rotate(3deg);
+}
+
+/* Remove generated tape styling and use only the green plant image */
+.welcome::before,
+.panel::before {
+  content: "";
+  border: none;
+  background-color: transparent;
+  background-image: url("/images/green-plant-washi-tape.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  mix-blend-mode: multiply;
+  opacity: 0.95;
+}
+
+/* Remove all washi tape decorations */
+.welcome::before,
+.panel::before {
+  content: none !important;
+}
