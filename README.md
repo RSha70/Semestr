@@ -1,5 +1,5 @@
 # Semestr
-A full-stack semester planner that turns uploaded course syllabi into an interactive to-do list with assignment deadlines, exam dates, and automated email reminders.
+A full-stack semester planner that turns uploaded course syllabi into an interactive to-do list with assignment deadlines, exam dates, and automated email reminders. link: semestr-lemon.vercel.app
 
 ## Tech Stack
 
