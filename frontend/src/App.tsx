@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import "./App.css";
 
@@ -6,7 +5,7 @@ type Assignment = {
   id: number;
   name: string;
   course: string;
-  due_date: string;
+  due_date: string | null;
   completed: boolean;
 };
 
@@ -19,7 +18,10 @@ function App() {
   const [extractedExams, setExtractedExams] = useState<Assignment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCourse, setEditCourse] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
   const fetchAssignments = () => {
     fetch("http://127.0.0.1:8000/assignments")
       .then((response) => {
@@ -60,7 +62,6 @@ function App() {
       setError("Couldn't add assignment. Check that the backend is running.");
     }
   };
-
   const handleCompletedChange = async (
     assignmentId: number,
     completed: boolean
@@ -84,6 +85,53 @@ function App() {
       setError("Couldn't update assignment.");
     }
   };
+
+  const startEditing = (assignment: Assignment) => {
+  setEditingId(assignment.id);
+  setEditName(assignment.name);
+  setEditCourse(assignment.course);
+
+  if (assignment.due_date) {
+    const date = new Date(assignment.due_date);
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    setEditDueDate(date.toISOString().slice(0, 16));
+  } else {
+    setEditDueDate("");
+  }
+};
+
+const saveEdit = async (assignmentId: number) => {
+  setError("");
+
+  try {
+    const params = new URLSearchParams({
+      name: editName,
+      course: editCourse,
+      due_date: editDueDate,
+    });
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/assignments/${assignmentId}?${params}`,
+      { method: "PUT" }
+    );
+
+    if (!response.ok) throw new Error();
+
+    const updatedAssignment = await response.json();
+
+    setAssignments((current) =>
+      current.map((assignment) =>
+        assignment.id === updatedAssignment.id
+          ? updatedAssignment
+          : assignment
+      )
+    );
+
+    setEditingId(null);
+  } catch {
+    setError("Couldn't save your changes.");
+  }
+};
 
   const handleSyllabusUpload = async (
     event: React.FormEvent<HTMLFormElement>
@@ -124,7 +172,7 @@ function App() {
       const params = new URLSearchParams({
         name: exam.name,
         course: exam.course,
-        due_date: exam.due_date,
+        due_date: exam.due_date ?? "",
       });
 
       const response = await fetch(
@@ -146,20 +194,27 @@ function App() {
   const pending = assignments.filter((assignment) => !assignment.completed);
   const completed = assignments.filter((assignment) => assignment.completed);
   const sortedPending = [...pending].sort(
-    (a, b) =>
-      new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
-  );
+  (a, b) =>
+    new Date(a.due_date ?? "9999-12-31").getTime() -
+    new Date(b.due_date ?? "9999-12-31").getTime()
+);
+  const formatDate = (date: string | null) => {
+  if (!date) return "No due date";
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleString([], {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+  const parsedDate = new Date(date);
 
-  const isOverdue = (date: string) =>
-    new Date(date).getTime() < Date.now();
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "No due date";
+  }
+
+  return parsedDate.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const isOverdue = (date: string | null) =>
+  !!date && new Date(date).getTime() < Date.now();
 
   return (
     <div className="app-shell">
@@ -232,14 +287,13 @@ function App() {
                 />
               </label>
               <label>
-                Due date and time
-                <input
-                  required
-                  type="datetime-local"
-                  value={dueDate}
-                  onChange={(event) => setDueDate(event.target.value)}
-                />
-              </label>
+  Due date (optional)
+  <input
+    type="datetime-local"
+    value={dueDate}
+    onChange={(e) => setDueDate(e.target.value)}
+  />
+</label>
               <button className="primary-button" type="submit">
                 Add to planner <span>↗</span>
               </button>
@@ -251,7 +305,8 @@ function App() {
               <h3>Have a syllabus?</h3>
               <p>Upload a PDF to pull out exam dates automatically.</p>
             </div>
-
+            
+      
             <form onSubmit={handleSyllabusUpload} className="upload-form">
               <label className="file-picker">
                 <span>{selectedFile ? selectedFile.name : "Choose a PDF syllabus"}</span>
@@ -323,18 +378,72 @@ function App() {
                         }
                         aria-label={`Mark ${assignment.name} complete`}
                       />
-                      <div className="assignment-info">
-                        <strong>{assignment.name}</strong>
-                        <span>{assignment.course}</span>
-                      </div>
-                      <div className="due-info">
-                        <span className={isOverdue(assignment.due_date) ? "due-date overdue" : "due-date"}>
-                          {formatDate(assignment.due_date)}
-                        </span>
-                        {isOverdue(assignment.due_date) && (
-                          <span className="overdue-label">Overdue</span>
-                        )}
-                      </div>
+                      {editingId === assignment.id ? (
+  <div className="assignment-info editing">
+    <input
+      value={editName}
+      onChange={(e) => setEditName(e.target.value)}
+      placeholder="Assignment"
+      required
+    />
+    <input
+      value={editCourse}
+      onChange={(e) => setEditCourse(e.target.value)}
+      placeholder="Course"
+      required
+    />
+    <input
+      type="datetime-local"
+      value={editDueDate}
+      onChange={(e) => setEditDueDate(e.target.value)}
+    />
+    <div className="edit-actions">
+  <button
+    className="secondary-button"
+    type="button"
+    onClick={() => saveEdit(assignment.id)}
+  >
+    Save
+  </button>
+  <button
+    className="secondary-button"
+    type="button"
+    onClick={() => setEditingId(null)}
+  >
+    Cancel
+  </button>
+</div>
+  </div>
+) : (
+  <>
+    <div className="assignment-info">
+      <strong>{assignment.name}</strong>
+      <span>{assignment.course}</span>
+    </div>
+    <div className="due-info">
+      <span
+        className={
+          isOverdue(assignment.due_date)
+            ? "due-date overdue"
+            : "due-date"
+        }
+      >
+        {formatDate(assignment.due_date)}
+      </span>
+      {isOverdue(assignment.due_date) && (
+        <span className="overdue-label">Overdue</span>
+      )}
+      <button
+        type="button"
+        className="secondary-button"
+        onClick={() => startEditing(assignment)}
+      >
+        Edit
+      </button>
+    </div>
+  </>
+)}
+                    
                     </div>
                   ))}
                 </div>

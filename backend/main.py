@@ -1,10 +1,11 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
 from io import BytesIO
 from database import SessionLocal
 from models import Assignment
 import re
+from sqlalchemy.orm import Session
 from datetime import datetime
 app = FastAPI()
 
@@ -27,26 +28,31 @@ def db_test():
     with SessionLocal() as db:
         return {"message": "Database connected!"}
 
-
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 @app.post("/assignments")
 def create_assignment(
     name: str,
     course: str,
-    due_date: str,
+    due_date: str | None = None,
+    db: Session = Depends(get_db)
 ):
-    db = SessionLocal()
+    parsed_due_date = datetime.fromisoformat(due_date) if due_date else None
 
     assignment = Assignment(
         name=name,
         course=course,
-        due_date=due_date,
+        due_date=parsed_due_date,
+        completed=False
     )
 
     db.add(assignment)
     db.commit()
     db.refresh(assignment)
-    db.close()
-
     return assignment
 @app.get("/assignments")
 def get_assignments():
@@ -58,21 +64,37 @@ def get_assignments():
 
     return assignments
 @app.put("/assignments/{assignment_id}")
-def update_assignment(assignment_id: int, completed: bool):
-    db = SessionLocal()
-
-    assignment = db.query(Assignment).filter(Assignment.id == assignment_id).first()
+def update_assignment(
+    assignment_id: int,
+    completed: bool | None = None,
+    name: str | None = None,
+    course: str | None = None,
+    due_date: str | None = None,
+    db: Session = Depends(get_db),
+):
+    assignment = db.query(Assignment).filter(
+        Assignment.id == assignment_id
+    ).first()
 
     if assignment is None:
-        db.close()
         return {"error": "Assignment not found"}
 
-    assignment.completed = completed
+    if completed is not None:
+        assignment.completed = completed
+
+    if name is not None:
+        assignment.name = name
+
+    if course is not None:
+        assignment.course = course
+
+    if due_date is not None:
+        assignment.due_date = (
+            datetime.fromisoformat(due_date) if due_date else None
+        )
 
     db.commit()
     db.refresh(assignment)
-    db.close()
-
     return assignment
 
 @app.post("/upload-syllabus")

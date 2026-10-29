@@ -1602,3 +1602,182 @@ body {
 .panel::before {
   content: none !important;
 }
+
+/* ===== Assignment editing ===== */
+
+.assignment-info.editing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 5px;
+  min-width: 0;
+}
+
+.assignment-info.editing input,
+.inline-edit-input,
+.inline-edit-date {
+  box-sizing: border-box;
+  width: 100%;
+  height: 27px;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 7px;
+  border: 1px solid #dfcbd3;
+  border-radius: 2px;
+  outline: none;
+  background: #fffdf6;
+  color: #493344;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  line-height: 1.2;
+  box-shadow: none;
+}
+
+.assignment-info.editing input:focus,
+.inline-edit-input:focus,
+.inline-edit-date:focus {
+  border-color: #c77f9e;
+  box-shadow: 0 0 0 2px #f5dce6;
+}
+
+.assignment-info.editing input::placeholder,
+.inline-edit-input::placeholder {
+  color: #b4a2ae;
+  opacity: 1;
+}
+
+/* Consistent date and action area */
+.due-info {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.due-info input[type="datetime-local"],
+.due-info .inline-edit-date {
+  box-sizing: border-box;
+  width: 132px;
+  max-width: 132px;
+  height: 27px;
+  min-width: 0;
+  padding: 3px 4px;
+  border: 1px solid #dfcbd3;
+  border-radius: 2px;
+  background: #fffdf6;
+  color: #493344;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+}
+
+/* Save and Cancel */
+.edit-actions,
+.due-info .edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  min-width: 0;
+}
+
+.edit-actions .secondary-button,
+.due-info .edit-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: 25px;
+  margin: 0;
+  padding: 3px 8px;
+  border: 1px solid #b5c7a8;
+  border-radius: 2px;
+  background: #edf3e5;
+  color: #5d775e;
+  box-shadow: 2px 2px 0 #d8e3cf;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.edit-actions .secondary-button:hover:not(:disabled) {
+  background: #dfead5;
+  transform: none;
+}
+
+/* Custom pink checkbox */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid #c9a5b2;
+  border-radius: 4px;
+  background: #fffdf6;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #bd7895;
+  background: #bd7895;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✓";
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+}
+
+@media (max-width: 520px) {
+  .due-info input[type="datetime-local"],
+  .due-info .inline-edit-date {
+    width: 112px;
+    max-width: 112px;
+  }
+
+  .edit-actions,
+  .due-info .edit-actions {
+    gap: 5px;
+  }
+
+  .edit-actions .secondary-button,
+  .due-info .edit-actions .secondary-button {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+}
+
+/* Keep the date field editable and visible */
+.assignment-info.editing {
+  flex: 1;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.assignment-info.editing input[type="datetime-local"] {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 4px;
+  pointer-events: auto;
+  cursor: text;
+  color: #493344;
+  background: #fffdf6;
+  border: 1px solid #dfcbd3;
+  border-radius: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  opacity: 1;
+}
